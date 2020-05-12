@@ -3,71 +3,58 @@
 #include <iostream>
 #include <functional>
 #include <optional>
+#include <vector>
+
 
 template <class... Types> struct TypeList 
-{
-};
+{};
 
-template <typename Types, typename T>
-struct append;
-
-template <>
-struct append<std::nullopt_t, std::nullopt_t> { using type = std::nullopt_t; };
-
-template <typename T>
-struct append<std::nullopt_t, T> { using type = TypeList<T, std::nullopt_t>; };
-
-
-template <typename Head, typename Tail, typename T>
-struct append<TypeList<Head, Tail>, T>
-{ using type = TypeList<Head, typename append<Tail, T>::type>; };
-
-
-template <typename ... Types> struct make;
-
-
-template <typename T, typename ... Rest>
-struct make<T, Rest...> { 
-    using type = TypeList<T, typename make<Rest...>::type>;
-};
-
-
-template <>
-struct make<> { using type = std::nullopt_t; };
-
-template <typename T> class debug_t;
-
-
-
-
-template<typename T, typename... Args>
-struct variant_push;
-
-template<typename T, typename... Args>
-struct variant_push<T, std::variant<Args...>>
-{
-    using type = std::variant<Args..., T>;
-};
 
 template<typename Types>
 struct typelist_to_variant;
 
-template<typename Head, typename Tail>
-struct typelist_to_variant<TypeList<Head, Tail>>
+
+template<typename... Types>
+struct typelist_to_variant<TypeList<Types...>>
 {
-    using type = typename variant_push<Head, typename typelist_to_variant<Tail>::type>::type;
+    using type = std::variant<Types...,std::nullopt_t>;
 };
 
-template<typename Head, typename... Others>
-struct remove_first_type
+
+template<class... Types>
+struct join
 {
-    using type = std::variant<std::nullopt_t,Others...>;
+    using type = TypeList<Types...>;
 };
 
-template<typename Head>
-struct typelist_to_variant<TypeList<Head, std::nullopt_t>>
+template<class... Types>
+struct join<TypeList<Types...>>
 {
-    using type = typename remove_first_type<Head>::type;
+    using type = TypeList<Types...>;
+};
+
+template<class... Types1, class... Types2>
+struct join<TypeList<Types1...>, Types2...>
+{
+    using type = TypeList<Types1...,Types2...>;
+};
+
+template<class... Types1, class... Types2>
+struct join< TypeList<Types1...>, TypeList<Types2...> >
+{
+    using type = TypeList<Types1...,Types2...>;
+};
+
+
+template<typename T>
+class Case
+{   
+    private:
+    std::optional<T> pattern;
+    public:
+    Case():pattern(std::nullopt){}
+    Case(T value):pattern(value){}
+    std::optional<T> const get_pattern() const{return pattern;}
 };
 
 
@@ -75,97 +62,85 @@ template <typename VariantType>
 class Match
 {
     private:
-    VariantType variant;
-    
-    
-    template<typename FunctionType>
-    auto exec(VariantType& variant,FunctionType function)->decltype(function(variant))
-    {
-        return function(variant);
-    }
-    
+    VariantType& variant;
 
-    void operator()(){}
-    
+
+
+    template<typename List,typename First,typename Second,typename... Rest>
     auto get_result_type()
     {
-        return make<std::nullopt_t,std::nullopt_t>();
-    }
 
-    template<typename First,typename Second>
-    auto get_result_type()
-    {
-        return make<decltype(
-            std::declval<Second>() (std::declval<VariantType&>())
-            ),
-            std::nullopt_t>();
-    }
-
-    template<typename First,typename Second,typename Third,typename Fourth,typename... Rest>
-    auto get_result_type(Rest... args)
-    {
-        using list1 = typename make<
-        decltype(
-            std::declval<Second>() (std::declval<VariantType&>())
-            ),
-        decltype(
-            std::declval<Fourth>() (std::declval<VariantType&>())
-            )
-            >::type;
+        using result_type1 = decltype( std::declval<Second>() (std::declval<VariantType&>()) );
         
-        using list2 = typename decltype(get_result_type(std::forward<Rest>(args)...))::type;
-        return append<list1,list2>();
+        if constexpr(sizeof...(Rest) == 0)
+        {
+            return join<List,result_type1>();
+        }
+
+        else
+        {
+            using result_type2 = decltype(get_result_type<typename join<List,result_type1>::type,Rest...>());
+            return result_type2();
+        }
     }
 
     private:
 
     public:
     Match(VariantType& variant):variant(variant){}
-    
-    template<typename First,typename Second,typename... Rest>
-    void operator()(First,Second second,Rest... rest)
+
+
+    template<typename... Args>
+    auto operator()(Args... args) -> typename typelist_to_variant<typename decltype(get_result_type<TypeList<>,Args...>())::type >::type
     {
-        using pattern = typename First::pattern;
-        auto function = second;
-
-        using result_type = typename typelist_to_variant<typename decltype(get_result_type<First,Second,Rest...>())::type>::type;
-
-
+        using result_type = typename typelist_to_variant<typename decltype(get_result_type<TypeList<>,Args...>())::type >::type;
         result_type result(std::nullopt);
-        //std::cout << debug_t<decltype(result)>() << std::endl;
-        
-        if (std::holds_alternative<pattern>(variant))
-        {
-            result = exec(variant,function);
-        }
-        
-        
-        operator()(std::forward<Rest>(rest)...);
-        
+        match(result,args...);
+        return result;
     }
+
+    template<typename ResultType,typename CaseType,typename FunctionType,typename... Rest>
+    void match(ResultType& result_ref,CaseType case_obj,FunctionType function,Rest... rest)
+    {
+        auto pattern = case_obj.get_pattern();
+        using match_type = typename decltype(pattern)::value_type;
+        
+        if (std::holds_alternative<match_type>(variant))
+        {
+            if (pattern.has_value())
+            {
+                if (std::get<match_type>(variant) == pattern.value())
+                {result_ref = function(variant);}
+            }
+            else
+            {
+                if (std::holds_alternative<match_type>(variant))
+                result_ref = function(variant);
+            }
+        }
+
+        if constexpr(sizeof...(Rest) != 0)
+        {
+            match(result_ref,std::forward<Rest>(rest)...);   
+        }
+        return;
+    }   
 };
-
-template<typename T>
-class Case
-{   
-    public:
-    using pattern = T;
-};
-
-
 
 
 int main()
 {
-    auto v = std::variant<int,std::string>(0);
+    auto v = std::variant<int,std::string,double,float>("aaa");
     
-    Match{v}
+    auto res = Match{v}
     (
-        Case<std::string>(),[](auto&) {std::cout << "contains string" << std::endl; return 0; },
-        Case<int>(),[](auto&) {std::cout << "contains int" << std::endl; return 0.1;}
+        Case<int>(0),[](auto&) {std::cout << "contains int value 0" << std::endl; return 0.1;},
+        Case<std::string>("aaa"),[](auto&) {return std::string("bbb"); },
+        Case<float>(),[](auto&) {std::cout << "contains string aaa" << std::endl; return 0; },
+        Case<double>(),[](auto&) {std::cout << "contains string aaa" << std::endl; return 4LL; }
     );
     
-
+    std::cout << "result of metching: " << std::get<std::string>(res) << std::endl;
     
     return 0;
 }
