@@ -14,10 +14,10 @@ int main()
     
     auto res = Match{v}
     (
-        Case<int>(0),[](auto&) {std::cout << "contains int value 0" << std::endl; return 0.1;},
+        Case<int>(0),[](auto&) {std::cout << "contains int value 0" << std::endl; return 0;},
         Case<std::string>("aaa"),[](auto&) {return; },
         Case<float>(),[](auto&) {std::cout << "contains string aaa" << std::endl; return 0; },
-        Case<double>(),[](auto&) {std::cout << "contains string aaa" << std::endl; return 4LL; }
+        Case<double>(),[](auto&) {std::cout << "contains string aaa" << std::endl; return 0; }
     );
     
     //debug_t<decltype(res)> d;
