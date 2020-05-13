@@ -1,5 +1,5 @@
 # Satch
-Satch C++ Pattern Match Library.
+Satch a C++ Pattern Match Library.
 ## Usage
 ```cpp example.cpp
 #include <iostream>
