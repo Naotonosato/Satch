@@ -19,7 +19,7 @@ int main()
         Case<double>(),[](auto&) {std::cout << "contains double" << std::endl; return 0; }
     );
     
-    std::cout << "result of metching: " << std::get<std::string>(res) << std::endl;
+    std::cout << "result of matching: " << std::get<std::string>(res) << std::endl;
     
     return 0;
 }

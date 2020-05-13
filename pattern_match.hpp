@@ -62,8 +62,6 @@ namespace satch
         private:
         VariantType& variant;
 
-
-
         template<typename List,typename First,typename Second,typename... Rest>
         auto get_result_type()
         {
@@ -88,21 +86,6 @@ namespace satch
                     return result_type2();
                 }
             }
-        }
-
-        private:
-
-        public:
-        Match(VariantType& variant):variant(variant){}
-
-
-        template<typename... Args>
-        auto operator()(Args... args) -> typename typelist_to_variant<typename decltype(get_result_type<TypeList<>,Args...>())::type >::type
-        {
-            using result_type = typename typelist_to_variant<typename decltype(get_result_type<TypeList<>,Args...>())::type >::type;
-            result_type result(std::nullopt);
-            match<0>(result,args...);
-            return result;
         }
 
         template<int Index,typename ResultType,typename CaseType,typename FunctionType,typename... Rest>
@@ -150,6 +133,20 @@ namespace satch
                 else {match<Index>(result_ref,std::forward<Rest>(rest)...);}
             }
             return;
-        }   
+        }
+
+        public:
+        Match(VariantType& variant):variant(variant){}
+
+
+        template<typename... Args>
+        auto operator()(Args... args) -> typename typelist_to_variant<typename decltype(get_result_type<TypeList<>,Args...>())::type >::type
+        {
+            using result_type = typename typelist_to_variant<typename decltype(get_result_type<TypeList<>,Args...>())::type >::type;
+            result_type result(std::nullopt);
+            match<0>(result,args...);
+            return result;
+        }
+
     };
 } // namespace satch

@@ -2,11 +2,7 @@
 #include <variant>
 #include <string>
 #include "pattern_match.hpp"
-
 using namespace satch;
-
-template <typename T>
-struct debug_t;
 
 int main()
 {
@@ -19,10 +15,9 @@ int main()
         Case<float>(),[](auto&) {std::cout << "contains string aaa" << std::endl; return 0; },
         Case<double>(),[](auto&) {std::cout << "contains string aaa" << std::endl; return 0; }
     );
-    
-    //debug_t<decltype(res)> d;
 
-    std::cout << "result of metching: " << res.index() << std::endl;
+
+    std::cout << "result of matching: " << res.index() << std::endl;
     
     return 0;
 }
