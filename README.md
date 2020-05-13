@@ -15,8 +15,8 @@ int main()
     (
         Case<int>(0),[](auto&) {std::cout << "contains int value 0" << std::endl; return 0.1;},
         Case<std::string>("aaa"),[](auto&) {return std::string("bbb"); },
-        Case<float>(),[](auto&) {std::cout << "contains string aaa" << std::endl; return 0; },
-        Case<double>(),[](auto&) {std::cout << "contains string aaa" << std::endl; return 4LL; }
+        Case<float>(),[](auto&) {std::cout << "contains float" << std::endl; return 0; },
+        Case<double>(),[](auto&) {std::cout << "contains double" << std::endl; return 4LL; }
     );
     
     std::cout << "result of metching: " << std::get<std::string>(res) << std::endl;
