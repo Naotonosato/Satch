@@ -27,5 +27,3 @@ int main()
 
 output: bbb
 
-## Isuue
-Now,cannnot return value typed same to other in Match().It will improved.
