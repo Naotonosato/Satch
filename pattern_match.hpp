@@ -1,3 +1,4 @@
+#include <type_traits>
 #include <variant>
 #include <optional>
 
@@ -43,7 +44,6 @@ namespace satch
         using type = TypeList<Types1...,Types2...>;
     };
 
-
     template<typename T>
     class Case
     {   
@@ -70,15 +70,23 @@ namespace satch
 
             using result_type1 = decltype( std::declval<Second>() (std::declval<VariantType&>()) );
             
-            if constexpr(sizeof...(Rest) == 0)
+            if constexpr(std::is_same<result_type1,void>::value)
             {
-                return join<List,result_type1>();
+                using result_type2 = decltype(get_result_type<List,Rest...>());
+                return result_type2();
             }
-
             else
             {
-                using result_type2 = decltype(get_result_type<typename join<List,result_type1>::type,Rest...>());
-                return result_type2();
+                if constexpr(sizeof...(Rest) == 0)
+                {
+                    return join<List,result_type1>();
+                }
+
+                else
+                {
+                    using result_type2 = decltype(get_result_type<typename join<List,result_type1>::type,Rest...>());
+                    return result_type2();
+                }
             }
         }
 
@@ -93,27 +101,43 @@ namespace satch
         {
             using result_type = typename typelist_to_variant<typename decltype(get_result_type<TypeList<>,Args...>())::type >::type;
             result_type result(std::nullopt);
-            match(result,args...);
+            match<0>(result,args...);
             return result;
         }
 
-        template<typename ResultType,typename CaseType,typename FunctionType,typename... Rest>
+        template<int Index,typename ResultType,typename CaseType,typename FunctionType,typename... Rest>
         void match(ResultType& result_ref,CaseType case_obj,FunctionType function,Rest... rest)
         {
             auto pattern = case_obj.get_pattern();
             using match_type = typename decltype(pattern)::value_type;
-            
+            constexpr bool is_returns_void = std::is_same<void, decltype(function(variant))>::value;
+
+
             if (std::holds_alternative<match_type>(variant))
             {
                 if (pattern.has_value())
                 {
-                    if (std::get<match_type>(variant) == pattern.value())
-                    {result_ref = function(variant);}
+                    if constexpr(is_returns_void)
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        if (std::get<match_type>(variant) == pattern.value())
+                        {result_ref.template emplace<Index>(function(variant));}
+                    }
                 }
                 else
                 {
-                    if (std::holds_alternative<match_type>(variant))
-                    result_ref = function(variant);
+                    if constexpr(is_returns_void)
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        if (std::holds_alternative<match_type>(variant))
+                        {result_ref.template emplace<Index>(function(variant));}
+                    }
                 }
             }
 
@@ -122,7 +146,8 @@ namespace satch
 
             if constexpr(sizeof...(Rest) != 0)
             {
-                match(result_ref,std::forward<Rest>(rest)...);   
+                if constexpr(!is_returns_void) {match<Index+1>(result_ref,std::forward<Rest>(rest)...);}
+                else {match<Index>(result_ref,std::forward<Rest>(rest)...);}
             }
             return;
         }   
