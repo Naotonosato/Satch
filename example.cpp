@@ -11,13 +11,12 @@ int main()
     auto res = Match{v}
     (
         Case<int>(0),[](auto&) {std::cout << "contains int value 0" << std::endl; return 0;},
-        Case<std::string>("aaa"),[](auto&) {return; },
-        Case<float>(),[](auto&) {std::cout << "contains string aaa" << std::endl; return 0; },
-        Case<double>(),[](auto&) {std::cout << "contains string aaa" << std::endl; return 0; }
+        Case<std::string>("aaa"),[](auto&) {return std::string("aaa->bbb"); },
+        Case<float>(),[](auto& va) {std::cout << "contains float " << std::get<float>(va) << std::endl; return 0; },
+        Case<double>(),[](auto&) {std::cout << "contains double" << std::endl; return 0; }
     );
 
-
-    std::cout << "result of matching: " << res.index() << std::endl;
+    std::cout << "result of matching: " << std::get<std::string>(res) << std::endl;
     
     return 0;
 }
