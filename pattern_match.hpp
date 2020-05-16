@@ -66,7 +66,7 @@ namespace satch
         VariantType& variant;
 
         template <typename List, typename First, typename Second, typename... Rest>
-        auto get_result_type() {
+        constexpr auto get_result_type() {
             using result_type1 =
                 decltype(std::declval<Second>()(std::declval<VariantType&>()));
 
