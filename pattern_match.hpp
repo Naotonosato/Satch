@@ -110,7 +110,8 @@ namespace satch
                                     function(variant));
                             } else {
                                 static_assert(is_comparable<match_type,
-                                                    match_type>::value,"Error: cannnot check match or not pattern");
+                                                    match_type>::value
+                                                    ,"Error: cannnot check match or not pattern because operator== is not defined");
                             }
                         }
                     }
