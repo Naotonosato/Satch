@@ -27,7 +27,7 @@ int main()
 
 ```
 
-output: bbb
+output: aaa->bbb
 
 ## ToDo
 Add "Default" case support.
