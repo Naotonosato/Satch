@@ -10,23 +10,23 @@ int main()
 
     auto res = Match{v}(
         Case<int>(0),
-        [](auto&) {
+        [](auto&&) {
             std::cout << "contains int value 0" << std::endl;
             return 0;
         },
-        Case<std::string>("aaa"), [](auto&) { return std::string("aaa->bbb"); },
+        Case<std::string>("aaa"), [](auto&& str) {std::cout << str << std::endl;return 10; },
         Case<float>(),
-        [](auto& va) {
-            std::cout << "contains float " << std::get<float>(va) << std::endl;
+        [](auto&& va) {
+            std::cout << "contains float " << va << std::endl;
             return 0;
         },
         Case<double>(),
-        [](auto&) {
+        [](auto&&) {
             std::cout << "contains double" << std::endl;
             return 0;
         });
 
-    std::cout << "result of matching: " << std::get<std::string>(res)
+    std::cout << "result of matching: " << std::get<1>(res)
               << std::endl;
 
     return 0;

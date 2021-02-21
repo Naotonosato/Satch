@@ -57,6 +57,7 @@ namespace satch
     template <typename T>
     class Case
     {
+        public: using match_type = T;
         private:
         std::optional<T> pattern;
 
@@ -78,11 +79,13 @@ namespace satch
         private:
         VariantType& variant;
 
-        template <typename List, typename First, typename Second, typename... Rest>
+        template <typename List, typename Pattern, typename Function, typename... Rest>
         auto get_result_type()
         {
+            using match_type = typename Pattern::match_type;
+
             using result_type1 =
-                decltype(std::declval<Second>()(std::declval<VariantType&>()));
+                decltype(std::declval<Function>()(std::declval<match_type>()));
 
             if constexpr (std::is_same<result_type1, void>::value)
             {
@@ -113,6 +116,7 @@ namespace satch
             }
         }
 
+
         template <int Index, typename ResultType, typename CaseType,
                 typename FunctionType, typename... Rest>
         void match(ResultType& result_ref, CaseType& case_obj,
@@ -122,7 +126,7 @@ namespace satch
             using match_type =
                 typename std::remove_reference<decltype(pattern)>::type::value_type;
             constexpr bool is_returns_void =
-                std::is_same<void, decltype(function(variant))>::value;
+                std::is_same<void, decltype(function(std::get<match_type>(variant)))>::value;
 
             if (std::holds_alternative<match_type>(variant))
             {
@@ -130,7 +134,7 @@ namespace satch
                 {
                     if constexpr (is_returns_void)
                     {
-                        function(variant);
+                        function(std::get<match_type>(variant));
                         return;
                     }
                     else
@@ -140,7 +144,8 @@ namespace satch
                             if (std::get<match_type>(variant) == pattern.value())
                             {
                                 result_ref.template emplace<Index>(
-                                    function(variant));
+                                    function(std::get<match_type>(variant)) 
+                                    );
                             }
                             else
                             {
@@ -161,7 +166,7 @@ namespace satch
                     {
                         if (std::holds_alternative<match_type>(variant))
                         {
-                            result_ref.template emplace<Index>(function(variant));
+                            result_ref.template emplace<Index>(function(std::get<match_type>(variant)));
                         }
                     }
                 }
