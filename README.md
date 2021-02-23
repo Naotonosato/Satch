@@ -42,7 +42,7 @@ int main()
 }
 ```
 
-#### output
+### output
 
 ```shell
 $ g++ -std=c++17 example.cpp; ./a.out
