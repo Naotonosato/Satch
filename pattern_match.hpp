@@ -73,8 +73,136 @@ namespace satch
         Default() = default;
     };
 
-    template <typename VariantType>
+     template <typename VariantType>
     class Match
+    {
+        private:
+        VariantType& variant;
+
+        template <typename Pattern, typename Function, typename... Rest>
+        auto get_result_type()
+        {
+            if constexpr (std::is_same<Pattern,Default>::value)
+            {
+                using result_type = decltype(std::declval<Function>()(std::declval<VariantType>()));
+                return result_type();
+            }
+          
+            else
+            {
+                using match_type = typename Pattern::match_type;
+                using result_type = decltype(std::declval<Function>()(std::declval<match_type>()));
+                return result_type();
+            }
+        }
+
+
+        template <int Index, typename ResultType, typename CaseType,
+                typename FunctionType, typename... Rest>
+        void match(ResultType& result_ref, CaseType& case_obj,
+                FunctionType& function, Rest&... rest)
+        {
+            if constexpr (std::is_same<CaseType,Default>::value)
+            {
+                static_assert(sizeof...(Rest) == 0,"Default case should passed at the end of arguments.");
+                constexpr bool is_returns_void =
+                    std::is_same<void, decltype(function(variant))>::value;
+                if constexpr (is_returns_void)
+                {
+                    function(variant);
+                    return;
+                }
+                else
+                {
+                    result_ref = function(variant);
+                }
+            }
+            else
+            {
+                auto& pattern = case_obj.get_pattern();
+                using match_type =
+                    typename std::remove_reference<decltype(pattern)>::type::value_type;
+                constexpr bool is_returns_void =
+                    std::is_same<void, decltype(function(std::get<match_type>(variant)))>::value;
+
+                if (std::holds_alternative<match_type>(variant))
+                {
+                    if (pattern.has_value())
+                    {
+                        if constexpr (is_returns_void)
+                        {
+                            function(std::get<match_type>(variant));
+                            return;
+                        }
+                        else
+                        {
+                            if constexpr (is_comparable<match_type, match_type>::value)
+                            {
+                                if (std::get<match_type>(variant) == pattern.value())
+                                {
+                                    result_ref = function(std::get<match_type>(variant));
+                                }
+                                else
+                                {
+                                    std::cout
+                                        << "Error: cannnot check match or not pattern"
+                                        << std::endl;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if constexpr (is_returns_void)
+                        {
+                            return;
+                        }
+                        else
+                        {
+                            if (std::holds_alternative<match_type>(variant))
+                            {
+                                result_ref = function(std::get<match_type>(variant));
+                            }
+                        }
+                    }
+                }
+
+                if (result_ref.has_value())
+                {
+                    return;
+                }
+
+                if constexpr (sizeof...(Rest) != 0)
+                {
+                    if constexpr (!is_returns_void)
+                    {
+                        match<Index + 1>(result_ref, rest...);
+                    }
+                    else
+                    {
+                        match<Index>(result_ref, rest...);
+                    }
+                }
+                return;
+            }
+        }
+
+        public:
+        Match(VariantType& variant) : variant(variant) {}
+
+        template <typename... Args>
+        auto operator()(Args&&... args) -> std::optional<decltype(get_result_type<Args...>())>
+        {
+            using result_type = decltype(get_result_type<Args...>());
+            std::optional<result_type> result(std::nullopt);
+            match<0>(result, args...);
+            return result;
+        }
+    };
+
+
+    template <typename VariantType>
+    class MatchReturnsMultiple
     {
         private:
         VariantType& variant;
@@ -245,7 +373,7 @@ namespace satch
         }
 
         public:
-        Match(VariantType& variant) : variant(variant) {}
+        MatchReturnsMultiple(VariantType& variant) : variant(variant) {}
 
         template <typename... Args>
         auto operator()(Args&&... args) -> typename typelist_to_variant<

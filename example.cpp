@@ -9,6 +9,7 @@ int main()
 {
     auto variant = std::variant<int, std::string, double, float>(0);
     std::string input;
+    std::cout << "please input text: ";
     std::cin >> input;
     variant = input;
 
