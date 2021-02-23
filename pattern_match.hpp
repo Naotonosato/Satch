@@ -54,17 +54,32 @@ namespace satch
     {
     };
 
+    class _Type{};
+
     template <typename T>
-    class Case
+    class Type
     {
-        public: using match_type = T;
+        public: 
+        using match_type = T;
+        using __type_id = _Type;
+        Type() = default;
+    };
+
+    class _Value{};
+
+    template <typename T>
+    class Value
+    {
+        public: 
+        using match_type = T;
+        using __type_id = _Value;
         private:
-        std::optional<T> pattern;
+        T pattern;
 
         public:
-        Case() : pattern(std::nullopt) {}
-        Case(T value) : pattern(value) {}
-        const std::optional<T>& get_pattern() const { return pattern; }
+        Value()=delete;
+        Value(T value) : pattern(value){}
+        const T& get_pattern() const { return pattern; }
     };
 
     class Default
@@ -125,21 +140,21 @@ namespace satch
             }
             else
             {
-                auto& pattern = case_obj.get_pattern();
-                using match_type =
-                    typename std::remove_reference<decltype(pattern)>::type::value_type;
+                using match_type = typename std::remove_reference<CaseType>::type::match_type;
                 constexpr bool is_returns_void =
                     std::is_same<void, decltype(function(std::get<match_type>(variant)))>::value;
 
                 if (std::holds_alternative<match_type>(variant))
                 {
-                    if (pattern.has_value())
+                    if constexpr(std::is_same<typename CaseType::__type_id,_Value>::value)
                     {
                         if constexpr (is_returns_void)
                         {
-                            static_assert(is_comparable<match_type, match_type>::value,"cannnot compare pattern and value due to its type");
+                            constexpr bool compiled_this_block = []{return true;}();
+                            static_assert(compiled_this_block && is_comparable<match_type, match_type>::value,"cannnot compare pattern and value due to its type");
                             
-                            if (std::get<match_type>(variant) == pattern.value())
+                            
+                            if (std::get<match_type>(variant) == case_obj.get_pattern())
                             {
                                 function(std::get<match_type>(variant));
                                 return;
@@ -147,9 +162,10 @@ namespace satch
                         }
                         else
                         {
-                            static_assert(is_comparable<match_type, match_type>::value,"cannnot compare pattern and value due to its type");
+                            constexpr bool compiled_this_block = []{return true;}();
+                            static_assert(compiled_this_block && is_comparable<match_type, match_type>::value,"cannnot compare pattern and value due to its type");
                                         
-                            if (std::get<match_type>(variant) == pattern.value())
+                            if (std::get<match_type>(variant) == case_obj.get_pattern())
                             {
                                 result_ref = function(std::get<match_type>(variant));
                             }
@@ -329,7 +345,8 @@ namespace satch
                     {
                         if constexpr (is_returns_void)
                         {
-                            static_assert(is_comparable<match_type, match_type>::value,"cannnot compare pattern and value due to its type");
+                            constexpr bool compiled_this_block = []{return true;}();
+                            static_assert(compiled_this_block && is_comparable<match_type, match_type>::value,"cannnot compare pattern and value due to its type");
                             
                             if (std::get<match_type>(variant) == pattern.value())
                             {
@@ -339,8 +356,9 @@ namespace satch
                         }
                         else
                         {
-                            static_assert(is_comparable<match_type, match_type>::value,"cannnot compare pattern and value due to its type");
-                                        
+                            constexpr bool compiled_this_block = []{return true;}();
+                            static_assert(compiled_this_block && is_comparable<match_type, match_type>::value,"cannnot compare pattern and value due to its type");
+                              
                             if (std::get<match_type>(variant) == pattern.value())
                             {
                                 result_ref.template emplace<Index>(function(std::get<match_type>(variant)));
@@ -399,4 +417,4 @@ namespace satch
             return result;
         }
     };
-}  // namespace satch
+} 
