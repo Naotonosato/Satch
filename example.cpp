@@ -7,7 +7,10 @@ using namespace satch;
 
 int main()
 {
-    auto variant = std::variant<int, std::string, double, float>("ABC");
+    auto variant = std::variant<int, std::string, double, float>(0);
+    std::string input;
+    std::cin >> input;
+    variant = input;
 
     auto result = Match{variant}(
         Case<int>(0), [](auto&&) 
@@ -15,24 +18,20 @@ int main()
                 std::cout << "variant contains int value 0" << std::endl;
                 return 0;
             },
-        Case<std::string>("ABC"), [](auto&& str) 
+        Case<std::string>(), [](auto&& str) 
             {
-                std::cout << str << std::endl;
+                std::cout << "variant contains string value: " << str << std::endl;
                 return 10; 
             },
-        Case<float>(),[](auto&& val) 
+        Default(), [](auto&& variant_)
             {
-                std::cout << "variant contains float " << val << std::endl;
-                return 0;
-            },
-        Case<double>(), [](auto&&) 
-            {
-                std::cout << "variant contains double" << std::endl;
+                std::cout << "variant doesn't contains int(0) or string value" << std::endl;
+                std::cout << "variant index: " << variant_.index() << std::endl;
                 return 0;
             }
         );
 
-    std::cout << "result of matching: " << result.value() << std::endl;
+    std::cout << "matching returned: " << result.value() << std::endl;
 
     return 0;
 }
