@@ -22,7 +22,7 @@ int main()
             },
         Case<float>(),[](auto&& val) 
             {
-                std::cout << "variant contains float " << va << std::endl;
+                std::cout << "variant contains float " << val << std::endl;
                 return 0;
             },
         Case<double>(), [](auto&&) 
