@@ -42,6 +42,8 @@ int main()
 }
 ```
 
+#### output
+
 ```shell
 $ g++ -std=c++17 example.cpp; ./a.out
 please input text: ABC
