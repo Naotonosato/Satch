@@ -151,8 +151,7 @@ namespace satch
                         if constexpr (is_returns_void)
                         {
                             constexpr bool compiled_this_block = []{return true;}();
-                            static_assert(compiled_this_block && is_comparable<match_type, match_type>::value,"cannnot compare pattern and value due to its type");
-                            
+                            static_assert(compiled_this_block && is_comparable<match_type, match_type>::value,"cannnot compare pattern and value due to its type");       
                             
                             if (std::get<match_type>(variant) == case_obj.get_pattern())
                             {
