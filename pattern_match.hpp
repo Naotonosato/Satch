@@ -73,6 +73,12 @@ namespace satch
         Default() = default;
     };
 
+    class None
+    {
+        public:
+        None() = default;
+    };
+
      template <typename VariantType>
     class Match
     {
@@ -131,30 +137,30 @@ namespace satch
                     {
                         if constexpr (is_returns_void)
                         {
-                            function(std::get<match_type>(variant));
-                            return;
+                            static_assert(is_comparable<match_type, match_type>::value,"cannnot compare pattern and value due to its type");
+                            
+                            if (std::get<match_type>(variant) == pattern.value())
+                            {
+                                function(std::get<match_type>(variant));
+                                return;
+                            }
                         }
                         else
                         {
-                            if constexpr (is_comparable<match_type, match_type>::value)
+                            static_assert(is_comparable<match_type, match_type>::value,"cannnot compare pattern and value due to its type");
+                                        
+                            if (std::get<match_type>(variant) == pattern.value())
                             {
-                                if (std::get<match_type>(variant) == pattern.value())
-                                {
-                                    result_ref = function(std::get<match_type>(variant));
-                                }
-                                else
-                                {
-                                    std::cout
-                                        << "Error: cannnot check match or not pattern"
-                                        << std::endl;
-                                }
+                                result_ref = function(std::get<match_type>(variant));
                             }
+                            
                         }
                     }
                     else
                     {
                         if constexpr (is_returns_void)
                         {
+                            function(std::get<match_type>(variant));
                             return;
                         }
                         else
@@ -191,12 +197,21 @@ namespace satch
         Match(VariantType& variant) : variant(variant) {}
 
         template <typename... Args>
-        auto operator()(Args&&... args) -> std::optional<decltype(get_result_type<Args...>())>
+        auto operator()(Args&&... args)
         {
-            using result_type = decltype(get_result_type<Args...>());
-            std::optional<result_type> result(std::nullopt);
-            match<0>(result, args...);
-            return result;
+            if constexpr(std::is_same<decltype(get_result_type<Args...>()),void>::value)
+            {
+                std::optional<None> result;
+                match<0>(result, args...);
+                return result;
+            }
+            else
+            {
+                using result_type = decltype(get_result_type<Args...>());
+                std::optional<result_type> result(std::nullopt);
+                match<0>(result, args...);
+                return result;
+            }
         }
     };
 
@@ -314,32 +329,30 @@ namespace satch
                     {
                         if constexpr (is_returns_void)
                         {
-                            function(std::get<match_type>(variant));
-                            return;
+                            static_assert(is_comparable<match_type, match_type>::value,"cannnot compare pattern and value due to its type");
+                            
+                            if (std::get<match_type>(variant) == pattern.value())
+                            {
+                                function(std::get<match_type>(variant));
+                                return;
+                            }
                         }
                         else
                         {
-                            if constexpr (is_comparable<match_type, match_type>::value)
+                            static_assert(is_comparable<match_type, match_type>::value,"cannnot compare pattern and value due to its type");
+                                        
+                            if (std::get<match_type>(variant) == pattern.value())
                             {
-                                if (std::get<match_type>(variant) == pattern.value())
-                                {
-                                    result_ref.template emplace<Index>(
-                                        function(std::get<match_type>(variant)) 
-                                        );
-                                }
-                                else
-                                {
-                                    std::cout
-                                        << "Error: cannnot check match or not pattern"
-                                        << std::endl;
-                                }
+                                result_ref.template emplace<Index>(function(std::get<match_type>(variant)));
                             }
+                            
                         }
                     }
                     else
                     {
                         if constexpr (is_returns_void)
                         {
+                            function(std::get<match_type>(variant));
                             return;
                         }
                         else
