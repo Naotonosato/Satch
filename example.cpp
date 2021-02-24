@@ -21,7 +21,7 @@ int main()
     auto result = Match{variant}(
         Type<UnComparable>(), [](auto&&) 
             {
-                std::cout << "variant contains int value 0" << std::endl;
+                std::cout << "variant contains value typed `UnCompareble`" << std::endl;
                // return 0;
             },
         Type<std::string>(), [](auto&& str) 
