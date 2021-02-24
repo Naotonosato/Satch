@@ -22,26 +22,27 @@ int main()
         Type<UnComparable>(), [](auto&&) 
             {
                 std::cout << "variant contains value typed `UnCompareble`" << std::endl;
-               // return 0;
+                return 0;
             },
         Type<std::string>(), [](auto&& str) 
             {
                 std::cout << "variant contains string value: " << str << std::endl;
-               // return 10; 
+                return 1; 
             },
         Value<int>(10), [](auto&& val)
             {
                 std::cout << "variant contains int value 10" << std::endl;
+                return 2;
             },
         Default(), [](auto&& variant_)
             {
                 std::cout << "variant doesn't contains int(0) or string value" << std::endl;
                 std::cout << "variant index: " << variant_.index() << std::endl;
-             //   return 0;
+                return 3;
             }
         );
 
-    //std::cout << "matching returned: " << result.value() << std::endl;
+    std::cout << "matching returned: " << result.value() << std::endl;
 
     return 0;
 }
