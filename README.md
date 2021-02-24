@@ -1,6 +1,7 @@
 # Satch
 Satch a C++ Pattern Match Library.
 ## Usage
+```cpp example.cpp
 #include <iostream>
 #include <optional>
 #include <variant>
