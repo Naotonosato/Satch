@@ -56,9 +56,9 @@ int main()
 
 ```shell
 $ g++ -std=c++17 example.cpp; ./a.out
-please input text: ABC
-variant contains string value: ABC
-matching returned: 10
+please input text: abc
+variant contains string value: abc
+matching returned: 1
 ```
 
 ## ToDo
