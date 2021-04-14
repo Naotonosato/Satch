@@ -21,7 +21,7 @@ int main()
             },
         satch::Value<int>(10), [](auto&& val)
             {
-                std::cout << "variant contains int value: " << val << std::endl;
+                std::cout << "variant contains int value 10" << val << std::endl;
                 return 2;
             },
         satch::Default(),[](auto&& variant) 
