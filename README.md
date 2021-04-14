@@ -7,47 +7,36 @@ Satch a C++ Pattern Match Library.
 #include <variant>
 #include <string>
 #include "pattern_match.hpp"
-using namespace satch;
 
-class UnComparable
-{
-    bool operator==(const UnComparable)=delete;
-};
 
 int main()
 {
-    auto variant = std::variant<int,UnComparable, std::string, double, float>(10);
+    auto variant = std::variant<int, std::string, double, float>(10);
     std::string input;
     std::cout << "please input text: ";
     std::cin >> input;
     variant = input;
 
-    auto result = Match{variant}(
-        Type<UnComparable>(), [](auto&&) 
-            {
-                std::cout << "variant contains value typed `UnCompareble`" << std::endl;
-                return 0;
-            },
-        Type<std::string>(), [](auto&& str) 
+    auto result = satch::Match{variant}(
+        satch::Type<std::string>(), [](auto&& str) 
             {
                 std::cout << "variant contains string value: " << str << std::endl;
                 return 1; 
             },
-        Value<int>(10), [](auto&& val)
+        satch::Value<int>(10), [](auto&& val)
             {
-                std::cout << "variant contains int value 10" << std::endl;
+                std::cout << "variant contains int value: " << val << std::endl;
                 return 2;
             },
-        Default(), [](auto&& variant_)
+        satch::Default(),[](auto&& variant) 
             {
-                std::cout << "variant doesn't contains int(0) or string value" << std::endl;
-                std::cout << "variant index: " << variant_.index() << std::endl;
+                std::cout << "variant.index() = " << variant.index() << std::endl;
                 return 3;
             }
         );
-
-    std::cout << "matching returned: " << result.value() << std::endl;
-
+    
+    std::cout << "matching returned: " << result << std::endl;
+    
     return 0;
 }
 ```
