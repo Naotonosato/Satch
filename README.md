@@ -23,7 +23,7 @@ int main()
                 std::cout << "variant contains string value: " << str << std::endl;
                 return 1; 
             },
-        satch::Value<int>(10), [](auto&& val)
+        satch::Value<int>(10), [](auto&& value)
             {
                 std::cout << "variant contains int value 10" << val << std::endl;
                 return 2;
