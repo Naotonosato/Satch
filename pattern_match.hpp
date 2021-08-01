@@ -5,44 +5,6 @@
 
 namespace satch
 {
-    template <class... Types>
-    struct TypeList
-    {
-    };
-
-    template <typename Types>
-    struct typelist_to_variant;
-
-    template <typename... Types>
-    struct typelist_to_variant<TypeList<Types...>>
-    {
-        using type = std::variant<Types..., std::nullopt_t>;
-    };
-
-    template <class... Types>
-    struct join
-    {
-        using type = TypeList<Types...>;
-    };
-
-    template <class... Types>
-    struct join<TypeList<Types...>>
-    {
-        using type = TypeList<Types...>;
-    };
-
-    template <class... Types1, class... Types2>
-    struct join<TypeList<Types1...>, Types2...>
-    {
-        using type = TypeList<Types1..., Types2...>;
-    };
-
-    template <class... Types1, class... Types2>
-    struct join<TypeList<Types1...>, TypeList<Types2...>>
-    {
-        using type = TypeList<Types1..., Types2...>;
-    };
-
     template <typename T, typename U, typename = std::void_t<>>
     struct is_comparable : std::false_type
     {
@@ -53,12 +15,6 @@ namespace satch
         T, U, std::void_t<decltype((std::declval<T>() == std::declval<U>()))>>
         : std::true_type
     {
-    };
-
-    template <typename T, typename... Types>
-    struct remove_first_tag
-    {
-        using variant_type_removed_first = std::variant<Types...>;
     };
 
     class _TypeBase{};
@@ -96,12 +52,6 @@ namespace satch
         public:
         Default() = default;
     };
-
-    template <typename... Types>
-    constexpr size_t get_size_of_variant_tags(const std::variant<Types...>&)
-    {
-        return sizeof...(Types);
-    }
 
     template <typename Type1, typename... Types>
     constexpr bool has_default_case()
